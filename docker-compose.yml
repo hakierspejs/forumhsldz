@@ -1,0 +1,50 @@
+version: '3'
+services:
+  postfix:
+    image: 'eeacms/postfix:latest'
+    environment:
+      - MTP_HOST=forum.hs-ldz.pl
+  postgresql:
+    image: 'bitnami/postgresql:11'
+    env_file:
+      - postgresql.variables.env
+    volumes:
+      - '/var/discourse/postgresql_data:/bitnami/postgresql'
+  redis:
+    image: 'bitnami/redis:5.0'
+    env_file:
+      - redis.variables.env
+    volumes:
+      - '/var/discourse/redis_data:/bitnami'
+  discourse:
+    image: 'bitnami/discourse:2'
+    ports:
+      - '127.0.0.1:49380:3000'
+    depends_on:
+      - postfix
+      - postgresql
+      - redis
+    volumes:
+      - '/var/discourse/discourse_data:/bitnami'
+    env_file:
+      - discourse.variables.env
+    labels:
+      traefik.http.routers.forum.rule: "Host(`forum.hs-ldz.pl`)"
+      traefik.http.routers.forum.entrypoints: "web"
+      traefik.http.routers.forum-https.rule: "Host(`forum.hs-ldz.pl`)"
+      traefik.http.routers.forum-https.entrypoints: "websecure"
+      traefik.http.routers.forum-https.tls.certresolver: "myresolver"
+  sidekiq:
+    image: 'bitnami/discourse:2'
+    depends_on:
+      - discourse
+    volumes:
+      - '/var/discourse/sidekiq_data:/bitnami'
+    command: 'nami start --foreground discourse-sidekiq'
+    env_file:
+      - discourse.variables.env
+    environment:
+      - DISCOURSE_HOST=discourse
+      - DISCOURSE_PORT=3000
+      - VIRTUAL_HOST=forum.hs-ldz.pl
+      - LETSENCRYPT_HOST=forum.hs-ldz.pl
