@@ -34,6 +34,10 @@ services:
       traefik.http.routers.forum-https.rule: "Host(`forum.hs-ldz.pl`)"
       traefik.http.routers.forum-https.entrypoints: "websecure"
       traefik.http.routers.forum-https.tls.certresolver: "myresolver"
+      traefik.http.middlewares.forum-https-redirect.redirectscheme.scheme: "https"
+      traefik.http.middlewares.forum-https-redirect.redirectscheme.permanent: "true"
+      traefik.http.routers.forum.middlewares: "forum-https-redirect@docker"
+
   sidekiq:
     image: 'bitnami/discourse:2'
     depends_on:
