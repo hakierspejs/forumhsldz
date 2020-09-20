@@ -10,6 +10,7 @@ services:
       - postgresql.variables.env
     volumes:
       - '/var/discourse/postgresql_data:/bitnami/postgresql'
+      - './postgres_conf/:/bitnami/postgresql/conf/'
   redis:
     image: 'bitnami/redis:5.0'
     env_file:
